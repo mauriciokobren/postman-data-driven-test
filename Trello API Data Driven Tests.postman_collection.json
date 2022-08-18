@@ -1,0 +1,615 @@
+{
+	"info": {
+		"_postman_id": "5f83350d-cc9d-423a-a8cf-446958a47cbc",
+		"name": "Trello API Data Driven Tests",
+		"description": "# Overview\n\nThis collection uses Trello REST API to demonstrate how to run data-driven tests with Postman.\n\nTrello REST API is presented with more details in [https://developer.atlassian.com/cloud/trello/rest/](https://developer.atlassian.com/cloud/trello/rest/The)\n\nThe main ideia here is to read a data file in which each row represents a Trello Card.\n\nFor each row/card the following actions are done using Trello REST API:\n\n1.  Creates a new card\n2.  Reads card data\n3.  Updates the card\n4.  Delete the card\n    \n\nThe board used in the tests is available here: [https://trello.com/b/yrrwS93X/kanban-board](https://trello.com/b/yrrwS93X/kanban-board)\n\n# Data file\n\nThe data file is expected to have the following columns:\n\n*   title: card title\n*   description: card description\n*   column: column of the board in which the card is created\n*   status: expected status received after the creation request\n*   new_title: the new title used in card update\n*   new_description: the new description used in card update\n*   new_column: the new column of the board used in card update\n*   new_status: the new status received after the update\n*   new_due_date: the new due date used in card update\n    \n\ntrello_api_data_driven_tests.csv is an example of the data file.\n\n# Environment Variables\n\nAn environment was created with 2 variables:\n\n*   trello_apikey: this variable stores the API key for your Trello account\n*   trello_apitoken: similarly, this variable stores the API token\n    \n\nTo know how to find you API key and token please visit the following page: [https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/](https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/)\n\n# Collection Variables\n\nThe collection has the following variables:\n\n*   base_url: this variable stores the base address of Trello API\n*   cards_endpoint: stores the endpoint itself. Concatenated with base url should allow a request\n*   todo_list_id: the id of the \"To Do\" column of the board\n*   doing_list_id: the id of the \"Doing\" column\n*   column_id: this variable is used in the Creates Card request and its value is set based on the column name in data file. The value is set in the Pre-request Script.\n*   new_column_id: this variable is used in the Update Card request and its value is set based on the column name in data file. The value is set in the Pre-request Script.\n    \n\n# Run the Collection using a data file\n\nThe following article has more details about running the collection using a data file: [https://learning.postman.com/docs/running-collections/working-with-data-files/](https://learning.postman.com/docs/running-collections/working-with-data-files/The)\n\nThe course Exploring Service APIs through Test Automation, by Amber Race, is an inspiration for this project: [https://testautomationu.applitools.com/exploring-service-apis-through-test-automation/](https://testautomationu.applitools.com/exploring-service-apis-through-test-automation/)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8777340"
+	},
+	"item": [
+		{
+			"name": "House keeping - not run with data file",
+			"item": [
+				{
+					"name": "Get Cards from Doing List and remove them Copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is correct\",function(){\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response size\",function(){\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.lengthOf.above(0);\r",
+									"    console.log(jsonData.length);\r",
+									"\r",
+									"    // The code below deletes the cards created by the Card Creation request\r",
+									"    for (let i = 0, len = jsonData.length; i < len; i++) {\r",
+									"        let card_id = jsonData[i].id;\r",
+									"        pm.collectionVariables.set('card_id',card_id);\r",
+									"        console.log(card_id);\r",
+									"        const postRequest = {\r",
+									"            method: 'DELETE',\r",
+									"            url: pm.collectionVariables.get(\"base_url\")+pm.collectionVariables.get(\"cards_endpoint\")+\"/\"+pm.collectionVariables.get(\"card_id\")+\"?key=\"+pm.environment.get(\"trello_apikey\") + \"&token=\"+ pm.environment.get(\"trello_apitoken\"),\r",
+									"\r",
+									"            header: {\r",
+									"                'Content-Type': 'application/json',\r",
+									"                'X-Foo': 'bar'\r",
+									"            }\r",
+									"        };\r",
+									"\r",
+									"        pm.sendRequest(postRequest, (error, response) => { console.log(error ? error : response.json()); });\r",
+									"    };\r",
+									"\r",
+									"});\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "key",
+									"value": "{{trello_apikey}}",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "token",
+									"value": "{{trello_apitoken}}",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}lists/{{doing_list_id}}/cards?key={{trello_apikey}}&token={{trello_apitoken}}",
+							"host": [
+								"{{base_url}}lists"
+							],
+							"path": [
+								"{{doing_list_id}}",
+								"cards"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{trello_apikey}}"
+								},
+								{
+									"key": "token",
+									"value": "{{trello_apitoken}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cards from To Do List and remove them",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is correct\",function(){\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response size\",function(){\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData).to.have.lengthOf.above(0);\r",
+									"    console.log(jsonData.length);\r",
+									"\r",
+									"    // The code below deletes the cards created by the Card Creation request\r",
+									"    for (let i = 0, len = jsonData.length; i < len; i++) {\r",
+									"        let card_id = jsonData[i].id;\r",
+									"        pm.collectionVariables.set('card_id',card_id);\r",
+									"        console.log(card_id);\r",
+									"        const postRequest = {\r",
+									"            method: 'DELETE',\r",
+									"            url: pm.collectionVariables.get(\"base_url\")+pm.collectionVariables.get(\"cards_endpoint\")+\"/\"+pm.collectionVariables.get(\"card_id\")+\"?key=\"+pm.environment.get(\"trello_apikey\") + \"&token=\"+ pm.environment.get(\"trello_apitoken\"),\r",
+									"\r",
+									"            header: {\r",
+									"                'Content-Type': 'application/json',\r",
+									"                'X-Foo': 'bar'\r",
+									"            }\r",
+									"\r",
+									"        };\r",
+									"\r",
+									"        pm.sendRequest(postRequest, (error, response) => { console.log(error ? error : response.json()); });\r",
+									"    };\r",
+									"\r",
+									"});\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "key",
+									"value": "{{trello_apikey}}",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "token",
+									"value": "{{trello_apitoken}}",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}lists/{{todo_list_id}}/cards?key={{trello_apikey}}&token={{trello_apitoken}}",
+							"host": [
+								"{{base_url}}lists"
+							],
+							"path": [
+								"{{todo_list_id}}",
+								"cards"
+							],
+							"query": [
+								{
+									"key": "key",
+									"value": "{{trello_apikey}}"
+								},
+								{
+									"key": "token",
+									"value": "{{trello_apitoken}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "noauth"
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Creates Card",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var column = pm.variables.get(\"column\");\r",
+							"\r",
+							"if (column == 'To Do'){\r",
+							"    pm.variables.set('column_id',pm.variables.get(\"todo_list_id\"))\r",
+							"} else if (column == 'Doing'){\r",
+							"    pm.variables.set('column_id',pm.variables.get(\"doing_list_id\"))\r",
+							"} else {\r",
+							"    pm.variables.set('column_id','62fbdfc355c98b00ee3a32e6')\r",
+							"}\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const expected_status = pm.variables.get(\"status\");\r",
+							"const expected_card_name = pm.variables.get(\"title\");\r",
+							"const expected_card_desc = pm.variables.get(\"description\");\r",
+							"\r",
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status is \" + expected_status,function(){\r",
+							"    pm.response.to.have.status(expected_status);\r",
+							"    pm.expect(jsonData).to.have.property(\"id\");\r",
+							"    pm.collectionVariables.set(\"card_id\", jsonData.id)\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Card title matches the expected value\",function(){\r",
+							"    pm.expect(jsonData).to.have.property(\"name\");\r",
+							"    pm.expect(jsonData.name).to.equal(expected_card_name);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Card description matches the expected value\",function(){\r",
+							"    pm.expect(jsonData).to.have.property(\"desc\");\r",
+							"    pm.expect(jsonData.desc).to.equal(expected_card_desc);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "{{title}}",
+							"type": "text"
+						},
+						{
+							"key": "desc",
+							"value": "{{description}}",
+							"type": "text"
+						},
+						{
+							"key": "idList",
+							"value": "{{column_id}}",
+							"type": "text"
+						},
+						{
+							"key": "key",
+							"value": "{{trello_apikey}}",
+							"type": "text"
+						},
+						{
+							"key": "token",
+							"value": "{{trello_apitoken}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}{{cards_endpoint}}",
+					"host": [
+						"{{base_url}}{{cards_endpoint}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check card data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const expected_status = pm.variables.get(\"status\");\r",
+							"const expected_card_name = pm.variables.get(\"title\");\r",
+							"const expected_card_desc = pm.variables.get(\"description\");\r",
+							"\r",
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status is 200\",function(){\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Card title matches the expected value\",function(){\r",
+							"    pm.expect(jsonData).to.have.property(\"name\");\r",
+							"    pm.expect(jsonData.name).to.equal(expected_card_name);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Card description matches the expected value\",function(){\r",
+							"    pm.expect(jsonData).to.have.property(\"desc\");\r",
+							"    pm.expect(jsonData.desc).to.equal(expected_card_desc);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{base_url}}{{cards_endpoint}}/{{card_id}}?key={{trello_apikey}}&token={{trello_apitoken}}",
+					"host": [
+						"{{base_url}}{{cards_endpoint}}"
+					],
+					"path": [
+						"{{card_id}}"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{trello_apikey}}"
+						},
+						{
+							"key": "token",
+							"value": "{{trello_apitoken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Card",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const expected_status = pm.variables.get(\"new_status\");\r",
+							"const expected_card_name = pm.variables.get(\"new_title\");\r",
+							"const expected_card_desc = pm.variables.get(\"new_description\");\r",
+							"\r",
+							"var new_jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status is 200\",function(){\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Card title matches the expected value\",function(){\r",
+							"    pm.expect(new_jsonData).to.have.property(\"name\");\r",
+							"    pm.expect(new_jsonData.name).to.equal(expected_card_name);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Card description matches the expected value\",function(){\r",
+							"    pm.expect(new_jsonData).to.have.property(\"desc\");\r",
+							"    pm.expect(new_jsonData.desc).to.equal(expected_card_desc);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var new_column = pm.variables.get(\"new_column\");\r",
+							"\r",
+							"if (new_column == 'To Do'){\r",
+							"    pm.variables.set('new_column_id',pm.variables.get(\"todo_list_id\"))\r",
+							"} else if (new_column == 'Doing'){\r",
+							"    pm.variables.set('new_column_id',pm.variables.get(\"doing_list_id\"))\r",
+							"} else {\r",
+							"    pm.variables.set('new_column_id','62fbdfc355c98b00ee3a32e6')\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"{{new_title}}\",\r\n    \"desc\": \"{{new_description}}\",\r\n    \"idList\": \"{{new_column_id}}\",\r\n    \"due\": \"{{new_due_date}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}{{cards_endpoint}}/{{card_id}}?key={{trello_apikey}}&token={{trello_apitoken}}",
+					"host": [
+						"{{base_url}}{{cards_endpoint}}"
+					],
+					"path": [
+						"{{card_id}}"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{trello_apikey}}"
+						},
+						{
+							"key": "token",
+							"value": "{{trello_apitoken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete card",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const expected_status = pm.variables.get(\"status\");\r",
+							"const expected_card_name = pm.variables.get(\"title\");\r",
+							"const expected_card_desc = pm.variables.get(\"description\");\r",
+							"\r",
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status is 200\",function(){\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Response is ok\",function(){\r",
+							"    pm.expect(pm.response.text()).to.equal('{\"limits\":{}}');\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "key",
+							"value": "{{trello_apikey}}",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "token",
+							"value": "{{trello_apitoken}}",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}{{cards_endpoint}}/{{card_id}}?key={{trello_apikey}}&token={{trello_apitoken}}",
+					"host": [
+						"{{base_url}}{{cards_endpoint}}"
+					],
+					"path": [
+						"{{card_id}}"
+					],
+					"query": [
+						{
+							"key": "key",
+							"value": "{{trello_apikey}}"
+						},
+						{
+							"key": "token",
+							"value": "{{trello_apitoken}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://api.trello.com/1/",
+			"type": "string"
+		},
+		{
+			"key": "cards_endpoint",
+			"value": "cards",
+			"type": "string"
+		},
+		{
+			"key": "todo_list_id",
+			"value": "62e3069f348b914c71fa6944",
+			"type": "string"
+		},
+		{
+			"key": "doing_list_id",
+			"value": "62e3069f348b914c71fa6945",
+			"type": "string"
+		},
+		{
+			"key": "column_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "card_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "new_column_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
